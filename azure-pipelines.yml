@@ -2,17 +2,13 @@ trigger:
 - main
 
 variables:
-  # Azure Resource Manager connection created during pipeline creation
   azureSubscription: '8c236a66-0841-42ca-aefd-2cc933fe1746'
-
-  # Function app name
   functionAppName: 'IsolatedFunction-Bicep'
-
-  # Agent VM image name
-  vmImageName: 'windows-2022'
-
-  # Working Directory
-  workingDirectory: '$(System.DefaultWorkingDirectory)/'
+  vmImageName: 'ubuntu-latest'
+  workingDirectory: '$(System.DefaultWorkingDirectory)'
+  resourceGroupName: 'IsolatedFunction'
+  location: 'uksouth'
+  templateFile: '$(workingDirectory)/templates/main.bicep'
 
 stages:
 - stage: Build
@@ -25,18 +21,19 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
+
     - task: DotNetCoreCLI@2
       displayName: Build
       inputs:        
         command: 'build'
         projects: |
           $(workingDirectory)/*.csproj
-        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
+        arguments: --output $(workingDirectory)/publish_output --configuration Release
 
     - task: ArchiveFiles@2
-      displayName: 'Archive files'
+      displayName: 'Archive function'
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
+        rootFolderOrFile: '$(workingDirectory)/publish_output'
         includeRootFolder: false
         archiveType: zip
         archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
@@ -44,6 +41,9 @@ stages:
 
     - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
       artifact: drop
+    
+    - publish: $(templateFile)
+      artifact: templates
 
 - stage: Deploy
   displayName: Deploy stage
@@ -61,10 +61,27 @@ stages:
       runOnce:
         deploy:
           steps:
-          - task: AzureFunctionApp@1
-            displayName: 'Azure functions app deploy'
-            inputs:
-              azureSubscription: '$(azureSubscription)'
-              appType: functionApp
-              appName: $(functionAppName)
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
+
+            - task: Bash@3
+              inputs:
+                targetType: 'inline'              
+                script: 'tree $(Pipeline.Workspace)' 
+
+            - task: AzureCLI@2
+              displayName: 'Deploy bicep infra'
+              inputs:
+                azureSubscription: $(azureSubscription)
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |                 
+                  az group create --name $(resourceGroupName) --location $(location)
+                  az deployment group create --resource-group $(resourceGroupName) \
+                  --template-file $(Pipeline.Workspace)/templates/main.bicep          
+
+            - task: AzureFunctionApp@1
+              displayName: 'Azure functions app deploy'
+              inputs:
+                azureSubscription: '$(azureSubscription)'
+                appType: functionApp
+                appName: $(functionAppName)
+                package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'

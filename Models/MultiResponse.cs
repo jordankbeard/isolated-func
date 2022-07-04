@@ -8,6 +8,6 @@ namespace IsolatedFunc.Models
         [CosmosDBOutput("my-database", "my-container",
             ConnectionStringSetting = "CosmosDbConnectionString", CreateIfNotExists = true)]
         public MyDocument? Document { get; set; }
-        public HttpResponseData HttpResponse { get; set; }
+        public HttpResponseData? HttpResponse { get; set; }
     }
 }
