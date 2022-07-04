@@ -1,8 +1,9 @@
-using System.Collections.Generic;
-using System.Net;
+using Microsoft.Extensions.Logging;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Extensions.Logging;
+using System.Net;
+using System.Web;
+using IsolatedFunc.Models;
 
 namespace IsolatedFunc
 {
@@ -16,16 +17,27 @@ namespace IsolatedFunc
         }
 
         [Function("HttpTriggerFunc")]
-        public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req)
+        public MultiResponse Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
+            var name = HttpUtility.ParseQueryString(req.Url.Query).Get("name");
+
+            var message = $"Hello {name}!!";
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
+            response.WriteString(message);
 
-            response.WriteString("Welcome to Azure Functions!");
-
-            return response;
+            return new MultiResponse()
+            {
+                Document = new MyDocument
+                {
+                    id = System.Guid.NewGuid().ToString(),
+                    message = message,
+                    name = name
+                },
+                HttpResponse = response
+            };
         }
     }
 }
