@@ -1,8 +1,3 @@
-# .NET Core Function App to Windows on Azure
-# Build a .NET Core function app and deploy it to Azure as a Windows function App.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/dotnet-core
-
 trigger:
 - main
 
@@ -11,7 +6,7 @@ variables:
   azureSubscription: '8c236a66-0841-42ca-aefd-2cc933fe1746'
 
   # Function app name
-  functionAppName: 'func-test-jordan'
+  functionAppName: 'IsolatedFunction-Bicep'
 
   # Agent VM image name
   vmImageName: 'windows-2022'
@@ -32,7 +27,7 @@ stages:
     steps:
     - task: DotNetCoreCLI@2
       displayName: Build
-      inputs:
+      inputs:        
         command: 'build'
         projects: |
           $(workingDirectory)/*.csproj
@@ -65,7 +60,6 @@ stages:
     strategy:
       runOnce:
         deploy:
-
           steps:
           - task: AzureFunctionApp@1
             displayName: 'Azure functions app deploy'
