@@ -3,7 +3,7 @@ trigger:
 
 variables:
   azureSubscription: '8c236a66-0841-42ca-aefd-2cc933fe1746'
-  functionAppName: 'IsolatedFunction-Bicep'
+  functionAppName: 'IsolatedFunctionBicep'
   vmImageName: 'ubuntu-latest'
   workingDirectory: '$(System.DefaultWorkingDirectory)'
   resourceGroupName: 'IsolatedFunction'
@@ -73,7 +73,7 @@ stages:
                 inlineScript: |                 
                   az group create --name $(resourceGroupName) --location $(location)
                   az deployment group create --resource-group $(resourceGroupName) \
-                  --template-file $(Pipeline.Workspace)/templates/main.bicep        
+                  --template-file $(Pipeline.Workspace)/templates/main.bicep --parameters appName=$(functionAppName)
 
             - task: AzureFunctionApp@1
               displayName: 'Azure functions app deploy'
