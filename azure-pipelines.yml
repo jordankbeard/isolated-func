@@ -60,12 +60,7 @@ stages:
     strategy:
       runOnce:
         deploy:
-          steps:
-
-            - task: Bash@3
-              inputs:
-                targetType: 'inline'              
-                script: 'tree $(Pipeline.Workspace)' 
+          steps:           
 
             - task: AzureCLI@2
               displayName: 'Deploy bicep infra'
@@ -76,7 +71,7 @@ stages:
                 inlineScript: |                 
                   az group create --name $(resourceGroupName) --location $(location)
                   az deployment group create --resource-group $(resourceGroupName) \
-                  --template-file $(Pipeline.Workspace)/templates/main.bicep          
+                  --template-file $(Pipeline.Workspace)/templates/main.bicep        
 
             - task: AzureFunctionApp@1
               displayName: 'Azure functions app deploy'
