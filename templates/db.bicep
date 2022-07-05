@@ -1,21 +1,25 @@
 @description('Cosmos DB account name')
 param accountName string
 
-@description('Location for the Cosmos DB account.')
-param location string = resourceGroup().location
+// deploying db to westus because it is not available in uk
+var location = 'eastus'
 
 @description('The name for the Core (SQL) database')
-param databaseName string = 'my-database'
+param databaseName string
 
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
   name: toLower(accountName)
   location: location
   properties: {
-    enableFreeTier: true
     databaseAccountOfferType: 'Standard'
     consistencyPolicy: {
       defaultConsistencyLevel: 'Session'
     }
+    capabilities: [
+      {
+        name: 'EnableServerless'
+      }
+    ]
     locations: [
       {
         locationName: location
@@ -30,8 +34,10 @@ resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-04-15
     resource: {
       id: databaseName
     }
-    options: {
-      throughput: 400
-    }
   }
 }
+
+
+
+
+output connectionString string = listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', accountName), '2021-04-15').connectionStrings[0].connectionString

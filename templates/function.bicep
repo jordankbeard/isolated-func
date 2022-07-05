@@ -13,6 +13,9 @@ param storageAccountName string
 @description('Storage account key')
 param storageAccountKey string
 
+@description('Database connection string')
+param dbConnectionString string
+
 resource hostingPlan 'Microsoft.Web/serverfarms@2021-03-01' = {
   name: appName
   location: location
@@ -75,7 +78,7 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         }
         {
           name: 'CosmosDbConnectionString'
-          value: 'AccountEndpoint=https://jordan.documents.azure.com:443/;AccountKey=6DwIMLC8nWwxsk5Oqqk74hhoPudpHHalQ2cODw61ciMwFF3uVU3hSKwAJ5Ogz6xMGDD0dqoiH5FjViPJDQhfDg=='
+          value: dbConnectionString
         }
       ]
       ftpsState: 'FtpsOnly'

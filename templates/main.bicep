@@ -1,5 +1,5 @@
 @description('The name of the function app that you wish to create.')
-param appName string = 'IsolatedFunction-Bicep'
+param appName string = 'IsolatedFunctionBicep'
 
 @description('Storage Account type')
 @allowed([
@@ -20,12 +20,12 @@ param location string = resourceGroup().location
 param runtime string = 'dotnet-isolated'
 
 @description('The name of the database account')
-param dbAccountName string
+param dbAccountName string = 'cosmodb${uniqueString(resourceGroup().id)}'
 
 @description('The name of the database')
-param dbName string
+param dbName string = 'my-database'
 
-var storageAccountName = '${uniqueString(resourceGroup().id)}azfunctions'
+var storageAccountName = 'azfunctions${uniqueString(resourceGroup().id)}'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' = {
   name: storageAccountName
@@ -36,12 +36,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-08-01' = {
   kind: 'StorageV2'
 }
 
-module db 'db.bicep' ={
-  name: appName
+module db 'db.bicep' = {
+  name: 'db-${appName}'
   params: {
     accountName: dbAccountName
     databaseName: dbName
-    location: location
   }
 }
 
@@ -53,5 +52,6 @@ module function 'function.bicep' = {
     storageAccountName: storageAccount.name
     storageAccountKey: storageAccount.listKeys().keys[0].value
     location: location
+    dbConnectionString: db.outputs.connectionString
   } 
 }
