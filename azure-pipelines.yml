@@ -8,7 +8,7 @@ variables:
   workingDirectory: '$(System.DefaultWorkingDirectory)'
   resourceGroupName: 'IsolatedFunction'
   location: 'uksouth'
-  templateFile: '$(workingDirectory)/templates/main.bicep'
+  templates: '$(workingDirectory)/templates'
 
 stages:
 - stage: Build
@@ -40,9 +40,11 @@ stages:
         replaceExistingArchive: true
 
     - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      displayName:  'Publish function'
       artifact: drop
     
-    - publish: $(templateFile)
+    - publish: $(templates)
+      displayName:  'Publish bicep templates'
       artifact: templates
 
 - stage: Deploy
